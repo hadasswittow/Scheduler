@@ -8,27 +8,20 @@
 #include "ITask.h"
 class PrinterTask : public ITask{
 public:
-    PrinterTask():ITask(0){};
+    PrinterTask(size_t t, unsigned long interval):ITask(t,interval){};
     void run();
     unsigned long getNextRunPeriod();
-    void setNextRunPeriod();
 };
 inline void PrinterTask::run(){
 
     cout<< " Hi this is a message from the printer!\n ";
-    setNextRunPeriod();
+    m_times_to_run-=1;
 
-}
-inline void PrinterTask::setNextRunPeriod(){
-
-    if(m_next_run_period < 200){
-        m_next_run_period+= 30;
-    }else{
-        m_next_run_period = 0;
-    }
 }
 inline unsigned long PrinterTask::getNextRunPeriod(){
-    return m_next_run_period;
+    if(m_times_to_run)
+        return m_interval;
+    return 0;
 }
 
 #endif //SCHEDULER_PRINTERTASK_H

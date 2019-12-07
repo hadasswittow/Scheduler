@@ -11,6 +11,7 @@ using std::vector;
 class Scheduler {
 public:
     void schedule();
+
     void addTask(ITask* task){m_tasks.push_back(task);};
 private:
     vector<ITask*> m_tasks;
