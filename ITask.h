@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <iostream>
+#include "Time.h"
 using std::cout;
 
 class ITask {
@@ -18,36 +19,22 @@ public:
     virtual unsigned long getNextRunPeriod() = 0; // in milliseconds
 
 };
+
+// Also an abstract class
 class Task : public ITask{
 public:
-    explicit Task(size_t t, unsigned long interval, unsigned long begin): m_begin_time(begin),m_times_to_run(t),m_interval(interval){};
-    void run();
-    virtual void runImplementation() = 0;
-    virtual unsigned long getNextRunPeriod() = 0; // in milliseconds
-    void setBeginTime(unsigned long time){m_begin_time = time;}
-    unsigned long  getBeginTime(){return m_begin_time;}
-    bool operator>(Task*);
+    explicit Task(): m_cycles(0){};
     virtual ~Task(){};
+
+    unsigned long getCycles(){return m_cycles;}
+    unsigned long incCycles(){return ++m_cycles;}
+
 protected:
-    size_t m_times_to_run;
-    unsigned long m_interval;
-    unsigned long m_next_run_period;
-    unsigned long m_begin_time;
+
+    Time m_timer;
+    unsigned long m_cycles;
 
 };
-inline bool Task::operator>(Task* t){
-    return m_begin_time > t->m_begin_time;
-}
-inline void Task::run(){
-    struct timeval tvalBefore, tvalAfter;  // save start time
-    gettimeofday (&tvalBefore, NULL);
-    runImplementation();
-    gettimeofday (&tvalAfter, NULL);
-    m_next_run_period = m_interval - (((tvalAfter.tv_sec - tvalBefore.tv_sec)+tvalAfter.tv_usec) - tvalBefore.tv_usec);
-    gettimeofday (&tvalBefore, NULL);
-    m_begin_time = tvalBefore.tv_sec + m_next_run_period;
-    m_times_to_run-=1;
-}
 
 
 

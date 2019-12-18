@@ -8,19 +8,27 @@
 #include "ITask.h"
 class PrinterTask : public Task{
 public:
-    PrinterTask(size_t t, unsigned long interval,unsigned long start):Task(t,interval,start){};
-    void runImplementation();
+    void run();
     unsigned long getNextRunPeriod();
-
+private:
+    enum{
+        INTERVAL = 1500, CYCLES = 6
+    };
 };
-inline void PrinterTask::runImplementation(){
+inline void PrinterTask::run(){
     cout<< " Hi this is a message from the printer!\n ";
+    incCycles();
 
 }
 inline unsigned long PrinterTask::getNextRunPeriod(){
-    if(m_times_to_run)
-        return m_next_run_period;
-    return 0;
+    m_timer.now();
+
+    unsigned long next = m_timer + INTERVAL;
+
+    cout << " -- Printer:   Next period in "<< next <<" milliseconds. "<<CYCLES - getCycles() <<" cycles left.\n";
+    next = (getCycles() < CYCLES ? next: 0 );
+
+    return next;
 }
 
 #endif //SCHEDULER_PRINTERTASK_H

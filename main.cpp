@@ -3,13 +3,11 @@
 #include "PrinterTask.h"
 #include "WordDocumentTask.h"
 int main() {
-    struct timeval tvalBefore;  // save start time
-    gettimeofday (&tvalBefore, NULL);
     Scheduler scheduler;
-    PrinterTask p(3, 20 , tvalBefore.tv_sec);
-    WordDocumentTask wd(2, 25,tvalBefore.tv_sec+1);
-    scheduler.addTask(&p);
-    scheduler.addTask(&wd);
+
+    scheduler.addTask(new PrinterTask);
+    scheduler.addTask(new WordDocumentTask);
+
     scheduler.schedule();
     return 0;
 }

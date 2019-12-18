@@ -8,46 +8,75 @@
 #include <vector>
 #include <queue>
 #include "ITask.h"
+
 using std::vector;
+using std::pair;
+using std::queue;
+#define CREATE_TIMED_TASK(task) std::make_pair(Time((task)->getNextRunPeriod()),(task))
+typedef pair<Time, Task *> TimedTask;
+
+
+
 class Scheduler {
 public:
     void schedule();
 
-    void addTask(Task* task){m_tasks.push(task);};
+    void addTask(Task *task) { m_tasks.push(CREATE_TIMED_TASK(task)); };
 private:
-    std::priority_queue<Task*,  std::vector<Task*>, std::greater<Task*> > m_tasks;
+    queue<TimedTask> m_tasks;
+    Time m_timer;
+
+    void waitUntilNextTask();
+
+    void executeNextTask();
+
+    bool shouldRun();
 
 };
-inline void Scheduler::schedule()
-{
+
+inline void Scheduler::schedule() {
     unsigned long start = 0;
 
-    while(!m_tasks.empty())
-    {
-        struct timeval now;  // save start time
-        gettimeofday (&now, NULL);
-        if(m_tasks.top()->getNextRunPeriod() <= (now.tv_sec*1000L))
-        {
-            Task* task = m_tasks.top();
-            task->run();
+    while (shouldRun()) {
+        // sleep if needed
+        waitUntilNextTask();
 
-            start = task->getNextRunPeriod();
-            if(start)
-            {
-                gettimeofday (&now, NULL);
-                task->setBeginTime(now.tv_sec+ start);
-                addTask(task);
-            }
-
-            m_tasks.pop();
-        }
-        else
-        {
-            // Scheduler sleeps until the next tasks time
-            gettimeofday (&now, NULL);
-            usleep((m_tasks.top()->getBeginTime() - now.tv_sec));
-        }
+        executeNextTask();
     }
+}
+
+inline void Scheduler::waitUntilNextTask() {
+    m_timer.now();
+    Time next_time = m_tasks.front().first;
+
+    if (m_timer < next_time) {
+
+        unsigned long sleep_time = next_time - m_timer.getTimeInMill();
+
+        cout << "Scheduler next run is in :    " << next_time.getTimeInMill() << "ms, current time is " <<m_timer.getTimeInMill() << " sleeping for "<<sleep_time<<" ms.\n";
+
+        usleep(sleep_time * 1000);
+    }
+}
+
+inline void Scheduler::executeNextTask() {
+
+    Task *task = m_tasks.front().second;
+    m_tasks.pop();
+    task->run();
+
+    unsigned long next_time = task->getNextRunPeriod();
+    if (next_time) {
+        m_tasks.push(std::make_pair(next_time,task));
+    }
+    else{
+        cout<<" *** task ended ***\n";
+    }
+
+}
+
+inline bool Scheduler::shouldRun() {
+    return !m_tasks.empty();
 }
 
 #endif //SCHEDULER_SCHEDULER_H
